@@ -1,6 +1,10 @@
 const express = require('express');
 const app = express();
 const serv = require('http').Server(app);
+const vector2 = require('victor'); // http://victorjs.org/
+const gameloop = require('node-gameloop'); // https://www.npmjs.com/package/node-gameloop
+const http = require('http');
+const iconv = require("iconv-lite");
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/client/index.html');
@@ -27,9 +31,12 @@ class gay {
             'npc': {}
         }
         for (var k in this.entities.player) {
-            if (this.entities.player[k].qq !== 10000) {
-                rep.player[k] = this.entities.player[k];
-            }
+            rep.player[k] = {
+                'qq': this.entities.player[k].qq,
+                'x': this.entities.player[k].coordinate.x,
+                'y': this.entities.player[k].coordinate.y,
+                'radius': this.entities.player[k].radius
+            };
         }
         rep.npc = this.entities.npc;
         return rep;
@@ -43,53 +50,35 @@ class gay {
         delete this.entities.player[id];
     }
 
-    updateKeyPress(id, data) {
-        this.entities.player[id].directionPress[data.inputId] = data.state;
+    getName(id, qq) {
+        var url = 'http://users.qzone.qq.com/fcg-bin/cgi_get_portrait.fcg?get_nick=1&uins=' + qq;
+        http.get(url, function (res) {
+            var chunks = [];
+            res.on('data', function (chunk) {
+                chunks.push(chunk);
+            });
+            res.on('end', function () {
+                var str = iconv.decode(Buffer.concat(chunks), 'GBK');
+                var name = str.substring(
+                    str.lastIndexOf(',"') + 2,
+                    str.lastIndexOf('",0]}')
+                );
+                game.entities.player[id].name = name;
+            });
+        });
     }
+
 
     skillPress(id, data) {
         if (data.skill == 'speedUp') {
-            // ????
             this.entities.player[id].maxSpeed = (data.state) ? 15 : 5;
         }
     }
 
     update() {
         for (var i in this.entities.player) {
-            // x?
-            if (this.entities.player[i].directionPress.right) {
-                this.entities.player[i].direction.x += 2 * this.entities.player[i].acceleration;
-            }
-            if (this.entities.player[i].directionPress.left) {
-                this.entities.player[i].direction.x -= 2 * this.entities.player[i].acceleration;
-            }
-            if (this.entities.player[i].direction.x > this.entities.player[i].maxSpeed) {
-                this.entities.player[i].direction.x -= 4 * this.entities.player[i].acceleration;
-            }
-            if (this.entities.player[i].direction.x < -1 * this.entities.player[i].maxSpeed) {
-                this.entities.player[i].direction.x += 4 * this.entities.player[i].acceleration;
-            }
-            // y?
-            if (this.entities.player[i].directionPress.down) {
-                this.entities.player[i].direction.y += 2 * this.entities.player[i].acceleration;
-            }
-            if (this.entities.player[i].directionPress.up) {
-                this.entities.player[i].direction.y -= 2 * this.entities.player[i].acceleration;
-            }
-            if (this.entities.player[i].direction.y > this.entities.player[i].maxSpeed) {
-                this.entities.player[i].direction.y -= 4 * this.entities.player[i].acceleration;
-            }
-            if (this.entities.player[i].direction.y < -1 * this.entities.player[i].maxSpeed) {
-                this.entities.player[i].direction.y += 4 * this.entities.player[i].acceleration;
-            }
-            // ????1
-            this.entities.player[i].x += this.entities.player[i].direction.x;
-            this.entities.player[i].y += this.entities.player[i].direction.y;
+           
         }
-    }
-
-    updateAvatar(id, qq) {
-        this.entities.player[id].qq = qq;
     }
 }
 
@@ -100,40 +89,28 @@ var SOCKET_LIST = {};
 const io = require('socket.io')(serv, {});
 
 io.sockets.on('connection', function (socket) {
+
     socket.id = Math.random();
-    var data = {
-        'qq': 10000,
-        'x': Math.floor(Math.random() * 1280 + 1),
-        'y': Math.floor(Math.random() * 720 + 1),
-        'direction': {
-            'x': 0,
-            'y': 0
-        },
-        'directionPress': {
-            'right': false,
-            'up': false,
-            'left': false,
-            'down': false
-        },
-        'maxSpeed': 5,
-        'speed': 0,
-        'acceleration': 0.2,
-        'radius': 40
-    }
-    game.addPlayer(socket.id, data);
     console.log(socket.id + ' connected.');
     SOCKET_LIST[socket.id] = socket;
 
-    socket.on('avatar', function (data) {
-        game.updateAvatar(socket.id,data);
-    });
-
-    socket.on('keyPress', function (data) {
-        game.updateKeyPress(socket.id, data);
-    });
-
-    socket.on('skillPress', function (data) {
-        game.skillPress(socket.id, data);
+    socket.on('newPlayer', function (qq) {
+        var pos = [Math.floor(Math.random() * 640), Math.floor(Math.random() * 360)];
+        var data = {
+            'qq': qq,
+            'name': '',
+            'coordinate': new vector2.fromArray(pos),
+            'speed': new vector2(0, 0),
+            'target': new vector2.fromArray(pos),
+            'maxSpeed': 10,
+            'maxAcceleration': 5,
+            'radius': 40,
+            'buff': [],
+            'lastHit': ''
+        }
+        game.addPlayer(socket.id, data);
+        game.getName(socket.id, qq);
+        console.log(socket.id + ' entered game!');
     });
 
     socket.on('disconnect', function () {
@@ -143,7 +120,7 @@ io.sockets.on('connection', function (socket) {
     });
 });
 
-var r = setInterval(function () {
+const loop = gameloop.setGameLoop(function (delta) {
 
     game.update();
 
@@ -157,4 +134,6 @@ var r = setInterval(function () {
         });
     }
 
-}, 20);
+}, 1000 / 60);
+
+// gameloop.clearGameLoop(loop);

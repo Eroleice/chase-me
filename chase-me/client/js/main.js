@@ -82,7 +82,7 @@
             'radius': arr.radius,
             'img': null
         };
-        var url = 'http://q1.qlogo.cn/g?b=qq&nk=' + arr.qq + '&s=100&t=1';
+        var url = 'http://q1.qlogo.cn/g?b=qq&nk=' + arr.qq + '&s=4';
         var img = new Image();
         img.src = url;
         img.onload = function () {
@@ -109,37 +109,10 @@ socket.on('update', function (data) {
 function inputQQ() {
     var qq = parseInt(prompt('请输入您的QQ：'));
     if (qq > 10000 && qq < 99999999999) {
-        socket.emit('avatar', qq);
+        socket.emit('newPlayer', qq);
     } else {
         inputQQ();
     }
 }
 
 inputQQ();
-
-document.onkeydown = function (event) {
-    if (event.keyCode === 39) {
-        socket.emit('keyPress', {'inputId':'right','state':true});
-    } else if (event.keyCode === 40) {
-        socket.emit('keyPress', { 'inputId': 'down', 'state': true });
-    } else if (event.keyCode === 37) {
-        socket.emit('keyPress', { 'inputId': 'left', 'state': true });
-    } else if (event.keyCode === 38) {
-        socket.emit('keyPress', { 'inputId': 'up', 'state': true });
-    } else if (event.keyCode === 32) {
-        socket.emit('skillPress', { 'skill': 'speedUp', 'state': true });
-    } 
-}
-document.onkeyup = function (event) {
-    if (event.keyCode === 39) {
-        socket.emit('keyPress', { 'inputId': 'right', 'state': false });
-    } else if (event.keyCode === 40) {
-        socket.emit('keyPress', { 'inputId': 'down', 'state': false });
-    } else if (event.keyCode === 37) {
-        socket.emit('keyPress', { 'inputId': 'left', 'state': false });
-    } else if (event.keyCode === 38) {
-        socket.emit('keyPress', { 'inputId': 'up', 'state': false });
-    } else if (event.keyCode === 32) {
-        socket.emit('skillPress', { 'skill': 'speedUp', 'state': false });
-    } 
-}
