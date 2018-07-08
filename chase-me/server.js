@@ -105,7 +105,7 @@ io.sockets.on('connection', function (socket) {
             'target': new vector2.fromArray(pos),
             'maxSpeed': 10,
             'maxAcceleration': 5,
-            'radius': 60,
+            'radius': 50,
             'buff': [],
             'lastHit': ''
         }
@@ -138,6 +138,6 @@ const loop = gameloop.setGameLoop(function (delta) {
 
     }
 
-}, 1000 / 60);
+}, 1000 / 30);
 
 // gameloop.clearGameLoop(loop);
