@@ -7,10 +7,51 @@
             'player': {},
             'npc': {}
         }
+        this.self = '';
         this.effect = [];
     }
 
     update(entities) {
+
+        // 获取canvas信息
+        var stageWidth = this.c.width;
+        var stageHeight = this.c.height;
+
+        var stageMidX = stageWidth / 2;
+        var stageMidY = stageHeight / 2;
+
+        // 中心化
+        var shiftX = stageMidX - entities.player[this.self].x;
+        var shiftY = stageMidY - entities.player[this.self].y;
+
+        // 重置画布
+        this.drawBlock({ 'x': 0, 'y': 0, 'w': stageWidth, 'h': stageHeight, 'color': 'white' });
+
+        // 绘制网格
+        this.ctx.save();
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = 'gray';
+
+        var netX = Math.floor((stageMidX + shiftX) % 50) + 0.5;
+        var netY = Math.floor((stageMidY + shiftY) % 50) + 0.5;
+
+        while (netX < stageWidth) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(netX, 0);
+            this.ctx.lineTo(netX, stageHeight);
+            this.ctx.stroke();
+            netX += 50;
+        }
+
+        while (netY < stageWidth) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, netY);
+            this.ctx.lineTo(stageWidth, netY);
+            this.ctx.stroke();
+            netY += 50;
+        }
+
+        this.ctx.restore();
 
         // 根据socket数据更新this.entities
         for (var k in entities.player) {
@@ -22,14 +63,11 @@
             if (!entities.player[k]) {
                 delete this.entities.player[k];
             } else {
-                this.entities.player[k].x = entities.player[k].x;
-                this.entities.player[k].y = entities.player[k].y;
+                this.entities.player[k].x = shiftX + entities.player[k].x;
+                this.entities.player[k].y = shiftY + entities.player[k].y;
                 this.entities.player[k].radius = entities.player[k].radius;
             }
         }
-
-        // 重置画布
-        this.drawBlock({ 'x': 0, 'y': 0, 'w': 1280, 'h': 720, 'color': 'white' });
 
         // 根据this.entities画图
         for (var k in this.entities.player) {
@@ -86,12 +124,8 @@
         var img = new Image();
         img.src = url;
         img.onload = function () {
-            cv.updateImg(id,img);
+            cv.entities.player[id].img = img;
         };
-    }
-
-    updateImg(id, img) {
-        this.entities.player[id].img = img;
     }
 
 }
@@ -101,7 +135,7 @@ var cv = new canvas();
 var socket = io();
 
 socket.on('update', function (data) {
-    var self = data.id;
+    cv.self = data.id;
     var entities = data.entities;
     cv.update(entities);
 });

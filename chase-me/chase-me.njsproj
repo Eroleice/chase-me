@@ -30,7 +30,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="client\js\main.js" />
-    <Compile Include="server.js" />
+    <Compile Include="server.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Content Include="client\index.html" />
     <Content Include="package.json" />
     <Content Include="README.md" />

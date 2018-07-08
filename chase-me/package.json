@@ -6,6 +6,8 @@
   "author": {
     "name": "Oliver"
   },
+  "repository": "https://github.com/Eroleice/chase-me.git",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.16.3",
     "iconv-lite": "^0.4.23",

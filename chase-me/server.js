@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const app = express();
 const serv = require('http').Server(app);
 const vector2 = require('victor'); // http://victorjs.org/
@@ -12,7 +12,7 @@ app.get('/', function (req, res) {
 
 app.use('/client', express.static(__dirname + '/client'));
 
-serv.listen(2000);
+serv.listen(80);
 
 class gay {
 
@@ -63,6 +63,7 @@ class gay {
                     str.lastIndexOf(',"') + 2,
                     str.lastIndexOf('",0]}')
                 );
+                console.log(name + '信息录入完成！');
                 game.entities.player[id].name = name;
             });
         });
@@ -77,7 +78,7 @@ class gay {
 
     update() {
         for (var i in this.entities.player) {
-           
+            this.entities.player[i].coordinate.add(new vector2(4,4));
         }
     }
 }
@@ -104,17 +105,17 @@ io.sockets.on('connection', function (socket) {
             'target': new vector2.fromArray(pos),
             'maxSpeed': 10,
             'maxAcceleration': 5,
-            'radius': 40,
+            'radius': 60,
             'buff': [],
             'lastHit': ''
         }
         game.addPlayer(socket.id, data);
         game.getName(socket.id, qq);
-        console.log(socket.id + ' entered game!');
+        console.log(socket.id + ' has entered game!');
     });
 
     socket.on('disconnect', function () {
-        console.log(socket.id + ' disconnected.');
+        console.log(socket.id + ' has disconnected.');
         delete SOCKET_LIST[socket.id];
         game.removePlayer(socket.id);
     });
@@ -128,10 +129,13 @@ const loop = gameloop.setGameLoop(function (delta) {
 
     for (var i in SOCKET_LIST) {
         var socket = SOCKET_LIST[i];
-        socket.emit('update', {
-            'id': socket.id,
-            'entities': entities
-        });
+        if (typeof game.entities.player[socket.id] !== 'undefined' && game.entities.player[socket.id].name !== '') {
+            socket.emit('update', {
+                'id': socket.id,
+                'entities': entities
+            });
+        }
+
     }
 
 }, 1000 / 60);
