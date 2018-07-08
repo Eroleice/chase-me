@@ -1,0 +1,9 @@
+{
+  "name": "chase-me",
+  "version": "0.0.0",
+  "description": "chase-me",
+  "main": "server.js",
+  "author": {
+    "name": "Oliver"
+  }
+}
