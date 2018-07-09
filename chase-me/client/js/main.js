@@ -14,7 +14,7 @@ class canvas {
         this.effect = [];
     }
 
-    update(entities) {
+    update(data) {
 
         // 获取canvas信息
         var stageWidth = this.c.width;
@@ -24,8 +24,8 @@ class canvas {
         var stageMidY = stageHeight / 2;
 
         // 中心化
-        var shiftX = stageMidX - entities.player[this.self].x;
-        var shiftY = stageMidY - entities.player[this.self].y;
+        var shiftX = stageMidX - data.entities.player[this.self].x;
+        var shiftY = stageMidY - data.entities.player[this.self].y;
 
         // 重置画布
         this.drawBlock({ 'x': 0, 'y': 0, 'w': stageWidth, 'h': stageHeight, 'color': 'white' });
@@ -56,19 +56,29 @@ class canvas {
 
         this.ctx.restore();
 
+        // 绘制 [安全岛边界]
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(shiftX, shiftY, data.stage.radius, 0, 2 * Math.PI);
+        this.ctx.closePath();
+        this.ctx.strokeStyle = "#ff0000";
+        this.ctx.lineWidth = 4;
+        this.ctx.stroke();
+        this.ctx.restore();
+        
         // 根据socket数据更新this.entities
-        for (var k in entities.player) {
-            if (entities.player.qq !== 10000 && !this.entities.player[k]) {
-                this.createPlayer(k, entities.player[k]);
+        for (var k in data.entities.player) {
+            if (data.entities.player.qq !== 10000 && !this.entities.player[k]) {
+                this.createPlayer(k, data.entities.player[k]);
             }
         }
         for (var k in this.entities.player) {
-            if (!entities.player[k]) {
+            if (!data.entities.player[k]) {
                 delete this.entities.player[k];
             } else {
-                this.entities.player[k].x = shiftX + entities.player[k].x;
-                this.entities.player[k].y = shiftY + entities.player[k].y;
-                this.entities.player[k].radius = entities.player[k].radius;
+                this.entities.player[k].x = shiftX + data.entities.player[k].x;
+                this.entities.player[k].y = shiftY + data.entities.player[k].y;
+                this.entities.player[k].radius = data.entities.player[k].radius;
             }
         }
 
@@ -106,6 +116,7 @@ class canvas {
     }
 
     drawPlayer(arr) {
+        // 头像
         this.ctx.save();
         this.ctx.beginPath();
         this.ctx.arc(arr.x, arr.y, arr.radius, 0, Math.PI * 2, true);
@@ -114,12 +125,19 @@ class canvas {
         this.ctx.clip();
         this.ctx.drawImage(arr.img, arr.x - arr.radius, arr.y - arr.radius, arr.radius * 2, arr.radius * 2);
         this.ctx.restore();
+        // 名字
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = "#8A2BE2";
+        var str = 'bold ' + Math.floor(arr.radius / 1.75) + 'px "Microsoft Yahei"';
+        this.ctx.font = str;
+        this.ctx.fillText(arr.name, arr.x, arr.y + arr.radius*1.75);
     }
 
     createPlayer(id,arr) {
         this.entities.player[id] = {
             'x': arr.x,
             'y': arr.y,
+            'name': arr.name,
             'radius': arr.radius,
             'img': null
         };
@@ -139,8 +157,7 @@ var socket = io();
 
 socket.on('update', function (data) {
     cv.self = data.id;
-    var entities = data.entities;
-    cv.update(entities);
+    cv.update(data);
 });
 
 

@@ -17,26 +17,51 @@ serv.listen(80);
 class gay {
 
     constructor() {
-        this.background = [];
+        this.stage = {
+            'radius': 1000,
+            'radiusK': 1
+        };
         this.entities = {
             'player': {},
             'npc': {}
-        }
+        };
         this.border = 2000;
     }
 
+    update() {
+        for (var i in this.entities.player) {
+            // 根据鼠标位置移动
+            var move = new vector2(0, 0);
+            var force = new vector2(0, 0);
+            if (this.entities.player[i].coordinate.length() > this.stage.radius) {
+                var dist = Math.floor((this.entities.player[i].coordinate.length() - this.stage.radius) / 100) + 1;
+                force = this.entities.player[i].coordinate.clone().normalize().invert().multiply(new vector2(dist, dist));
+            }
+            move = this.entities.player[i].speed.add(this.entities.player[i].target.multiply(this.entities.player[i].maxAcceleration));
+            if (move.length() > this.entities.player[i].maxSpeed.length()) {
+                move = move.add(force);
+                this.entities.player[i].coordinate = this.entities.player[i].coordinate.add(move.normalize().multiply(this.entities.player[i].maxSpeed));
+            } else {
+                move = move.add(force);
+                this.entities.player[i].coordinate = this.entities.player[i].coordinate.add(move);
+            }
+        }
+    }
     report() {
         var rep = {
             'player': {},
             'npc': {}
         }
         for (var k in this.entities.player) {
-            rep.player[k] = {
-                'qq': this.entities.player[k].qq,
-                'x': this.entities.player[k].coordinate.x,
-                'y': this.entities.player[k].coordinate.y,
-                'radius': this.entities.player[k].radius
-            };
+            if (this.entities.player[k].name !== '') {
+                rep.player[k] = {
+                    'qq': this.entities.player[k].qq,
+                    'name': this.entities.player[k].name,
+                    'x': this.entities.player[k].coordinate.x,
+                    'y': this.entities.player[k].coordinate.y,
+                    'radius': this.entities.player[k].radius
+                };
+            }
         }
         rep.npc = this.entities.npc;
         return rep;
@@ -76,18 +101,6 @@ class gay {
         }
     }
 
-    update() {
-        for (var i in this.entities.player) {
-            //this.entities.player[i].coordinate.add(new vector2(4,4));
-            var move = new vector2(0, 0);
-            move = this.entities.player[i].speed.add(this.entities.player[i].target.multiply(this.entities.player[i].maxAcceleration));
-            if (move.length() > this.entities.player[i].maxSpeed.length()) {
-                this.entities.player[i].coordinate = this.entities.player[i].coordinate.add(move.normalize().multiply(this.entities.player[i].maxSpeed));
-            } else {
-                this.entities.player[i].coordinate = this.entities.player[i].coordinate.add(move);
-            }
-        }
-    }
 }
 
 var game = new gay();
@@ -103,7 +116,7 @@ io.sockets.on('connection', function (socket) {
     SOCKET_LIST[socket.id] = socket;
 
     socket.on('newPlayer', function (qq) {
-        var pos = [Math.floor(Math.random() * 640), Math.floor(Math.random() * 360)];
+        var pos = [Math.floor(Math.random() * 1000 - 500), Math.floor(Math.random() * 1000 - 500)];
         var data = {
             'qq': qq,
             'name': '',
@@ -122,9 +135,11 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('move', function (data) {
-        game.entities.player[socket.id].target.x = data.x;
-        game.entities.player[socket.id].target.y = data.y;
-        game.entities.player[socket.id].target.normalize();
+        if (game.entities.player[socket.id]) {
+            game.entities.player[socket.id].target.x = data.x;
+            game.entities.player[socket.id].target.y = data.y;
+            game.entities.player[socket.id].target.normalize();
+        }
     });
     socket.on('disconnect', function () {
         console.log(socket.id + ' has disconnected.');
@@ -144,6 +159,9 @@ const loop = gameloop.setGameLoop(function (delta) {
         if (typeof game.entities.player[socket.id] !== 'undefined' && game.entities.player[socket.id].name !== '') {
             socket.emit('update', {
                 'id': socket.id,
+                'stage': {
+                    'radius': Math.floor(game.stage.radius * game.stage.radiusK)
+                },
                 'entities': entities
             });
         }
