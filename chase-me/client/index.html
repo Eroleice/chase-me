@@ -20,6 +20,7 @@
 <body>
     <canvas id="canvas" width="1280" height="720">抱歉，你的浏览器不支持canvas！</canvas>
     <script>
+        // canvas自适应
         var c = document.querySelector("canvas");
         var context = canvas.getContext('2d');
         c.width = document.documentElement.clientWidth;
@@ -28,6 +29,18 @@
             c.width = document.documentElement.clientWidth;
             c.height = document.documentElement.clientHeight;
         };
+        // 防止移动端拖动
+        document.body.ontouchstart = function (e) {
+            if (e && e.preventDefault) { e.preventDefault(); }
+            if (e && e.stopPropagation) { e.stopPropagation(); }
+            return false;
+        }
+
+        document.body.ontouchmove = function (e) {
+            if (e && e.preventDefault) { e.preventDefault(); }
+            if (e && e.stopPropagation) { e.stopPropagation(); }
+            return false;
+        }
     </script>
     <script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
     <script type="text/javascript" src="./client/js/main.js"></script>

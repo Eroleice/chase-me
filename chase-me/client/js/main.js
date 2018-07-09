@@ -1,4 +1,6 @@
-﻿class canvas {
+﻿var mc = false;
+
+class canvas {
 
     constructor() {
         this.c = document.getElementById("canvas");
@@ -43,7 +45,7 @@
             netX += 50;
         }
 
-        while (netY < stageWidth) {
+        while (netY < stageHeight) {
             this.ctx.beginPath();
             this.ctx.moveTo(0, netY);
             this.ctx.lineTo(stageWidth, netY);
@@ -140,6 +142,20 @@ socket.on('update', function (data) {
     cv.update(entities);
 });
 
+
+// 鼠标移动
+cv.c.onmousemove = function (e) {
+    if (!mc) {
+        mc = true;
+        var location = getLocation(e.clientX, e.clientY);
+        context.clearRect(0, 0, cv.c.width, cv.c.height);
+    }
+    
+}
+
+// 鼠标移动内置CD
+setInterval(function () { mc = false; }, 100);
+
 function inputQQ() {
     var qq = parseInt(prompt('请输入您的QQ：'));
     if (qq > 10000 && qq < 99999999999) {
@@ -150,3 +166,11 @@ function inputQQ() {
 }
 
 inputQQ();
+
+function getLocation(x, y) {
+    var bbox = cv.c.getBoundingClientRect();
+    return {
+        x: (x - bbox.left) * (cv.c.width / bbox.width),
+        y: (y - bbox.top) * (cv.c.height / bbox.height)
+    };
+}
