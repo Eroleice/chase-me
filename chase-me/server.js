@@ -81,8 +81,8 @@ class gay {
             //this.entities.player[i].coordinate.add(new vector2(4,4));
             var move = new vector2(0, 0);
             move = this.entities.player[i].speed.add(this.entities.player[i].target.multiply(this.entities.player[i].maxAcceleration));
-            if (move.length() > this.entities.player[i].maxSpeed) {
-                this.entities.player[i].coordinate = this.entities.player[i].coordinate.add(move.normalize().multiply(new vector2(this.entities.player[i].maxSpeed, this.entities.player[i].maxSpee)));
+            if (move.length() > this.entities.player[i].maxSpeed.length()) {
+                this.entities.player[i].coordinate = this.entities.player[i].coordinate.add(move.normalize().multiply(this.entities.player[i].maxSpeed));
             } else {
                 this.entities.player[i].coordinate = this.entities.player[i].coordinate.add(move);
             }
@@ -109,9 +109,9 @@ io.sockets.on('connection', function (socket) {
             'name': '',
             'coordinate': new vector2.fromArray(pos),
             'speed': new vector2(0, 0),
-            'target': new vector2(0,0),
-            'maxSpeed': 10,
-            'maxAcceleration': new vector2(5,5),
+            'target': new vector2(0, 0),
+            'maxSpeed': new vector2(10, 10),
+            'maxAcceleration': new vector2(5, 5),
             'radius': 50,
             'buff': [],
             'lastHit': ''
