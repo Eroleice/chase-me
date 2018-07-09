@@ -157,7 +157,9 @@ cv.c.onmousemove = function (e) {
 // 鼠标移动内置CD
 setInterval(function () {
     mc = false;
-    socket.emit('move', mousePosition);
+    if (cv.selft !== '') {
+        socket.emit('move', mousePosition);
+    }
 }, 1000 / 45);
 
 function inputQQ() {
