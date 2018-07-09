@@ -1,4 +1,5 @@
 ﻿var mc = false;
+var mousePosition = { 'x': 0, 'y': 0 };
 
 class canvas {
 
@@ -148,13 +149,16 @@ cv.c.onmousemove = function (e) {
     if (!mc) {
         mc = true;
         var location = getLocation(e.clientX, e.clientY);
-        context.clearRect(0, 0, cv.c.width, cv.c.height);
+        mousePosition.x = location.x - cv.c.width / 2;
+        mousePosition.y = location.y - cv.c.height / 2; 
     }
-    
 }
 
 // 鼠标移动内置CD
-setInterval(function () { mc = false; }, 100);
+setInterval(function () {
+    mc = false;
+    socket.emit('move', mousePosition);
+}, 1000 / 45);
 
 function inputQQ() {
     var qq = parseInt(prompt('请输入您的QQ：'));

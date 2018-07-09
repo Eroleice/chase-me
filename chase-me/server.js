@@ -78,7 +78,14 @@ class gay {
 
     update() {
         for (var i in this.entities.player) {
-            this.entities.player[i].coordinate.add(new vector2(4,4));
+            //this.entities.player[i].coordinate.add(new vector2(4,4));
+            var move = new vector2(0, 0);
+            move = this.entities.player[i].speed.add(this.entities.player[i].target.multiply(this.entities.player[i].maxAcceleration));
+            if (move.length() > this.entities.player[i].maxSpeed) {
+                this.entities.player[i].coordinate = this.entities.player[i].coordinate.add(move.normalize().multiply(new vector2(this.entities.player[i].maxSpeed, this.entities.player[i].maxSpee)));
+            } else {
+                this.entities.player[i].coordinate = this.entities.player[i].coordinate.add(move);
+            }
         }
     }
 }
@@ -102,9 +109,9 @@ io.sockets.on('connection', function (socket) {
             'name': '',
             'coordinate': new vector2.fromArray(pos),
             'speed': new vector2(0, 0),
-            'target': new vector2.fromArray(pos),
+            'target': new vector2(0,0),
             'maxSpeed': 10,
-            'maxAcceleration': 5,
+            'maxAcceleration': new vector2(5,5),
             'radius': 50,
             'buff': [],
             'lastHit': ''
@@ -114,6 +121,11 @@ io.sockets.on('connection', function (socket) {
         console.log(socket.id + ' has entered game!');
     });
 
+    socket.on('move', function (data) {
+        game.entities.player[socket.id].target.x = data.x;
+        game.entities.player[socket.id].target.y = data.y;
+        game.entities.player[socket.id].target.normalize();
+    });
     socket.on('disconnect', function () {
         console.log(socket.id + ' has disconnected.');
         delete SOCKET_LIST[socket.id];
